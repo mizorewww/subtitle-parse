@@ -1,0 +1,26 @@
+[package]
+name = "subtitle-parse"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+description = "Tolerant SRT and WebVTT parsing, sidecar discovery and subtitle track ordering"
+repository = "https://github.com/mizorewww/subtitle-parse"
+readme = "README.md"
+keywords = ["subtitles", "srt", "webvtt", "vtt", "captions"]
+categories = ["parser-implementations", "multimedia"]
+# Consumed as a git dependency; see README.
+publish = false
+
+[features]
+# Serialize `Cue` and the track types.
+serde = ["dep:serde"]
+
+[dependencies]
+serde = { version = "1", features = ["derive"], optional = true }
+
+[dev-dependencies]
+serde_json = "1"
+tempfile = "3"
+
+[package.metadata.docs.rs]
+all-features = true
