@@ -11,7 +11,8 @@ const SRT: &str = include_str!("fixtures/youtube-rolling.en.srt");
 
 /// The spoken lines, once each, in order.
 fn spoken() -> Vec<String> {
-    VTT.split("\n\n")
+    VTT.replace("\r\n", "\n")
+        .split("\n\n")
         .filter_map(|block| {
             let mut lines = block.lines();
             let header = lines.next()?;
@@ -52,6 +53,8 @@ fn youtube_rolling_captions_say_each_line_once_at_its_time() {
     assert!(vtt.skipped.is_empty());
     check(&vtt.cues);
     check(&parse(SRT).cues);
+    // As a Windows editor saves it.
+    check(&parse(&SRT.replace('\n', "\r\n")).cues);
 }
 
 #[test]
