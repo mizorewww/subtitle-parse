@@ -1,0 +1,260 @@
+1
+00:00:00,080 --> 00:00:02,540
+ 
+In this video, I'll show you exactly how
+
+2
+00:00:02,540 --> 00:00:02,550
+In this video, I'll show you exactly how
+ 
+
+3
+00:00:02,550 --> 00:00:04,740
+In this video, I'll show you exactly how
+to use the assistant step by step.
+
+4
+00:00:04,740 --> 00:00:04,750
+to use the assistant step by step.
+ 
+
+5
+00:00:04,750 --> 00:00:06,940
+to use the assistant step by step.
+We start with a blank project and
+
+6
+00:00:06,940 --> 00:00:06,950
+We start with a blank project and
+ 
+
+7
+00:00:06,950 --> 00:00:09,410
+We start with a blank project and
+a single question: what should the tool do?
+
+8
+00:00:09,410 --> 00:00:09,420
+a single question: what should the tool do?
+ 
+
+9
+00:00:09,420 --> 00:00:11,340
+a single question: what should the tool do?
+First, open the settings page and
+
+10
+00:00:11,340 --> 00:00:11,350
+First, open the settings page and
+ 
+
+11
+00:00:11,350 --> 00:00:13,540
+First, open the settings page and
+choose the model you want to use.
+
+12
+00:00:13,540 --> 00:00:13,550
+choose the model you want to use.
+ 
+
+13
+00:00:13,550 --> 00:00:15,740
+choose the model you want to use.
+Then paste your notes into the box,
+
+14
+00:00:15,740 --> 00:00:15,750
+Then paste your notes into the box,
+ 
+
+15
+00:00:15,750 --> 00:00:17,940
+Then paste your notes into the box,
+press enter, and wait a few seconds.
+
+16
+00:00:17,940 --> 00:00:17,950
+press enter, and wait a few seconds.
+ 
+
+17
+00:00:17,950 --> 00:00:19,870
+press enter, and wait a few seconds.
+The answer appears on the right,
+
+18
+00:00:19,870 --> 00:00:19,880
+The answer appears on the right,
+ 
+
+19
+00:00:19,880 --> 00:00:22,340
+The answer appears on the right,
+and you can copy it with one click.
+
+20
+00:00:22,340 --> 00:00:22,350
+and you can copy it with one click.
+ 
+
+21
+00:00:22,350 --> 00:00:24,540
+and you can copy it with one click.
+If the answer is too long, ask
+
+22
+00:00:24,540 --> 00:00:24,550
+If the answer is too long, ask
+ 
+
+23
+00:00:24,550 --> 00:00:26,200
+If the answer is too long, ask
+for a shorter version instead.
+
+24
+00:00:26,200 --> 00:00:26,210
+for a shorter version instead.
+ 
+
+25
+00:00:26,210 --> 00:00:28,670
+for a shorter version instead.
+You can also attach a file, such as
+
+26
+00:00:28,670 --> 00:00:28,680
+You can also attach a file, such as
+ 
+
+27
+00:00:28,680 --> 00:00:30,600
+You can also attach a file, such as
+a spreadsheet or a short PDF.
+
+28
+00:00:30,600 --> 00:00:30,610
+a spreadsheet or a short PDF.
+ 
+
+29
+00:00:30,610 --> 00:00:32,530
+a spreadsheet or a short PDF.
+The assistant reads the whole file
+
+30
+00:00:32,530 --> 00:00:32,540
+The assistant reads the whole file
+ 
+
+31
+00:00:32,540 --> 00:00:34,190
+The assistant reads the whole file
+before it answers your question.
+
+32
+00:00:34,190 --> 00:00:34,200
+before it answers your question.
+ 
+
+33
+00:00:34,200 --> 00:00:36,390
+ 
+Now let's look at a real example.
+
+34
+00:00:36,390 --> 00:00:36,400
+Now let's look at a real example.
+ 
+
+35
+00:00:36,400 --> 00:00:38,860
+Now let's look at a real example.
+I have a list of fifty customer emails
+
+36
+00:00:38,860 --> 00:00:38,870
+I have a list of fifty customer emails
+ 
+
+37
+00:00:38,870 --> 00:00:41,330
+I have a list of fifty customer emails
+and I want to sort them by topic.
+
+38
+00:00:41,330 --> 00:00:41,340
+and I want to sort them by topic.
+ 
+
+39
+00:00:41,340 --> 00:00:43,530
+and I want to sort them by topic.
+I paste them in and ask for
+
+40
+00:00:43,530 --> 00:00:43,540
+I paste them in and ask for
+ 
+
+41
+00:00:43,540 --> 00:00:45,730
+I paste them in and ask for
+three groups with a short label each.
+
+42
+00:00:45,730 --> 00:00:45,740
+three groups with a short label each.
+ 
+
+43
+00:00:45,740 --> 00:00:47,930
+three groups with a short label each.
+A few seconds later, the groups are
+
+44
+00:00:47,930 --> 00:00:47,940
+A few seconds later, the groups are
+ 
+
+45
+00:00:47,940 --> 00:00:50,130
+A few seconds later, the groups are
+ready, and every email has a label.
+
+46
+00:00:50,130 --> 00:00:50,140
+ready, and every email has a label.
+ 
+
+47
+00:00:50,140 --> 00:00:51,790
+ready, and every email has a label.
+That is the whole workflow.
+
+48
+00:00:51,790 --> 00:00:51,800
+That is the whole workflow.
+ 
+
+49
+00:00:51,800 --> 00:00:53,720
+That is the whole workflow.
+Thanks for watching, and see you
+
+50
+00:00:53,720 --> 00:00:53,730
+Thanks for watching, and see you
+ 
+
+51
+00:00:53,730 --> 00:00:55,110
+Thanks for watching, and see you
+in the next video.
+
+52
+00:00:55,110 --> 00:00:55,120
+in the next video.
+ 
+
