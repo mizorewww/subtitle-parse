@@ -28,6 +28,8 @@ pub struct Parsed {
 /// - Timestamps may be `HH:MM:SS,mmm`, `HH:MM:SS.mmm` or `MM:SS.mmm`.
 /// - Cue markup and HTML entities are removed; the lines of a cue are joined.
 /// - Rolling captions (common in automatic subtitles) keep only the new text.
+///   Each line of YouTube's two-line rolling window becomes one cue, from its
+///   first word to the end of its freeze.
 /// - A cue with an empty, backwards or non-finite time range lands in
 ///   [`Parsed::skipped`], so sorting and searching downstream can trust the times.
 pub fn parse(content: &str) -> Parsed {
@@ -51,7 +53,7 @@ pub fn parse(content: &str) -> Parsed {
             continue;
         }
         let mut text_parts: Vec<String> = vec![];
-        while i < lines.len() && !lines[i].trim().is_empty() {
+        while i < lines.len() && !ends_cue(&lines, i) {
             let cleaned = clean_cue_text(lines[i]);
             if !cleaned.is_empty() {
                 text_parts.push(cleaned);
@@ -133,6 +135,30 @@ pub fn parse_timestamp(value: &str) -> Option<f64> {
         result = result * 60.0 + n;
     }
     Some(result)
+}
+
+/// Whether the cue text stops at `lines[index]`. WebVTT ends a cue only at an
+/// empty line, and YouTube's automatic captions use a line holding a single space
+/// to keep their rolling window two lines tall, before the first line or after the
+/// last. A blank line still ends the cue when the next cue, or nothing, follows it,
+/// as in loosely written SRT.
+fn ends_cue(lines: &[&str], index: usize) -> bool {
+    let line = lines[index];
+    if !line.trim().is_empty() {
+        return false;
+    }
+    if line.is_empty() {
+        return true;
+    }
+    let starts_cue = |offset: usize| {
+        lines
+            .get(index + offset)
+            .is_some_and(|line| parse_cue_header(line).is_some())
+    };
+    match lines.get(index + 1).map(|next| next.trim()) {
+        None | Some("") => true,
+        Some(next) => starts_cue(1) || (next.bytes().all(|b| b.is_ascii_digit()) && starts_cue(2)),
+    }
 }
 
 /// How many leading lines of `next` end `previous`: the longest overlap.

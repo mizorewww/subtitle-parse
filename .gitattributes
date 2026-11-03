@@ -1,0 +1,2 @@
+# Subtitle fixtures stay byte for byte as the tools wrote them.
+tests/fixtures/** -text
