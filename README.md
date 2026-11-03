@@ -7,7 +7,8 @@ No required dependencies.
   `x < 3 and y > 2` stays text. Rolling automatic captions lose their repeats.
 - **Reading**: UTF-8 and UTF-16 by BOM, never with lossy replacement.
 - **Finding**: sidecar files beside a video, or every subtitle file in a directory.
-- **Choosing**: order tracks by preference, interface language and original language.
+- **Choosing**: order tracks by preference, interface language and original language,
+  machine translations last.
 
 Failures are typed. The crate has no user-facing text of its own, so an application
 words them in its own language.

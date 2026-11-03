@@ -10,6 +10,14 @@ pub struct Track {
     pub language: Option<String>,
     pub name: Option<String>,
     pub kind: TrackKind,
+    /// A machine translation of another track, such as YouTube's automatic
+    /// translations (yt-dlp gives their URL a `tlang` parameter). Only the source
+    /// can say so; a language code does not.
+    #[cfg_attr(
+        feature = "serde",
+        serde(default, skip_serializing_if = "core::ops::Not::not")
+    )]
+    pub translated: bool,
     pub origin: TrackOrigin,
     /// Position in discovery order; ties in [`sort_tracks`] keep to it.
     #[cfg_attr(feature = "serde", serde(default))]
@@ -55,6 +63,7 @@ impl Track {
             language,
             name: None,
             kind: TrackKind::Unknown,
+            translated: false,
             origin: TrackOrigin::File { path },
             source_order: usize::MAX,
         }
@@ -86,6 +95,11 @@ pub fn normalize_language(language: &str) -> String {
 /// A generic preference such as `zh` covers its language family equally; a
 /// script/region preference such as `zh-Hans` prefers that exact variant.
 /// Within an identical language, known human captions precede known automatic ones.
+///
+/// A machine translation follows every track that is not one, whatever its
+/// language: it is another track's words, translated word by word, and sources
+/// limit it harder (YouTube answers 429 for translations it serves at once for the
+/// original). Human captions in the interface language still come first.
 pub fn sort_tracks(
     tracks: &mut [Track],
     preferences: &[String],
@@ -141,7 +155,7 @@ pub fn sort_tracks(
             .iter()
             .position(|group| group == &language)
             .unwrap_or(usize::MAX);
-        (preferred, group)
+        (track.translated, preferred, group)
     };
     tracks.sort_by_key(rank);
     // Unknown labels retain their positions. Only reorder slots whose type the
@@ -149,9 +163,13 @@ pub fn sort_tracks(
     let mut start = 0;
     while start < tracks.len() {
         let language = tracks[start].language.as_deref().map(normalize_language);
+        let translated = tracks[start].translated;
         let end = tracks[start..]
             .iter()
-            .position(|track| track.language.as_deref().map(normalize_language) != language)
+            .position(|track| {
+                track.language.as_deref().map(normalize_language) != language
+                    || track.translated != translated
+            })
             .map(|offset| start + offset)
             .unwrap_or(tracks.len());
         let positions: Vec<_> = (start..end)
@@ -179,6 +197,7 @@ mod tests {
             language: Some(language.into()),
             name: None,
             kind,
+            translated: false,
             source_order: 0,
             origin: TrackOrigin::Online {
                 language_key: language.into(),
@@ -256,6 +275,52 @@ mod tests {
     }
 
     #[test]
+    fn translations_follow_the_original_whatever_the_interface_language() {
+        // YouTube for an English video with automatic captions only: yt-dlp lists
+        // `en-orig`, `en`, translations of the captions (`zh-Hans`), and with manual
+        // subtitles their translations too (`zh-Hans-en`).
+        let mut tracks = Vec::new();
+        for (index, (language, kind, translated)) in [
+            ("zh-Hans-en", TrackKind::Automatic, true),
+            ("en-orig", TrackKind::Automatic, false),
+            ("ja", TrackKind::Automatic, true),
+            ("en", TrackKind::Automatic, false),
+            ("zh-Hans", TrackKind::Automatic, true),
+        ]
+        .into_iter()
+        .enumerate()
+        {
+            let mut track = track(language, kind);
+            track.translated = translated;
+            track.source_order = index;
+            tracks.push(track);
+        }
+        for interface in ["zh", "zh-Hans", "ja", "en", "fr"] {
+            sort_tracks(&mut tracks, &[], interface, Some("en"));
+            assert!(
+                !tracks[0].translated && !tracks[1].translated,
+                "{interface}: {:?}",
+                languages(&tracks)
+            );
+            assert!(tracks[2..].iter().all(|track| track.translated));
+        }
+        // An explicit preference does not promote a translation either.
+        sort_tracks(&mut tracks, &["zh-Hans".into()], "zh", None);
+        assert_eq!(languages(&tracks)[..2], ["en-orig", "en"]);
+        // Among translations, the usual order holds.
+        assert_eq!(languages(&tracks)[2..], ["zh-Hans", "zh-Hans-en", "ja"]);
+
+        // Human captions in the interface language still come first, then the
+        // original language's automatic captions, then translations.
+        let mut human = track("zh-Hans", TrackKind::Manual);
+        human.source_order = 9;
+        tracks.push(human);
+        sort_tracks(&mut tracks, &[], "zh", Some("en"));
+        assert_eq!(tracks[0].kind, TrackKind::Manual);
+        assert_eq!(languages(&tracks)[..3], ["zh-Hans", "en-orig", "en"]);
+    }
+
+    #[test]
     fn languages_normalize_to_one_spelling() {
         for (written, normal) in [("ZHO", "zh"), (" zh_Hans ", "zh-hans"), ("fre", "fr")] {
             assert_eq!(normalize_language(written), normal);
@@ -285,6 +350,12 @@ mod tests {
             })
         );
         assert_eq!(serde_json::from_value::<Track>(value).unwrap(), online);
+        // Only a translation says so; older readers ignore the field.
+        let mut translated = online.clone();
+        translated.translated = true;
+        let value = serde_json::to_value(&translated).unwrap();
+        assert_eq!(value["translated"], true);
+        assert_eq!(serde_json::from_value::<Track>(value).unwrap(), translated);
         let older: Track = serde_json::from_value(serde_json::json!({
             "id": "a",
             "language": null,
