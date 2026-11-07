@@ -49,7 +49,7 @@ The `cli` feature builds a `subtitle-parse` command over the same library.
 Library users do not get its dependencies.
 
 ```sh
-cargo install --git https://github.com/mizorewww/subtitle-parse --features cli
+cargo install --locked --git https://github.com/mizorewww/subtitle-parse --features cli
 ```
 
 ```sh
