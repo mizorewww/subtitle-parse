@@ -5,6 +5,7 @@ No required dependencies.
 
 - **Parsing**: SRT and WebVTT timestamps, cue markup, numeric and named entities.
   `x < 3 and y > 2` stays text. Rolling automatic captions lose their repeats.
+- **Writing**: cues back out as SRT or WebVTT.
 - **Reading**: UTF-8 and UTF-16 by BOM, never with lossy replacement.
 - **Finding**: sidecar files beside a video, or every subtitle file in a directory.
 - **Choosing**: order tracks by preference, interface language and original language,
@@ -41,6 +42,36 @@ if let Some(path) = best_file(tracks, &[], "en", None) {
 The `serde` feature serializes `Cue` and the track types.
 
 Not on crates.io yet; depend on it by Git revision.
+
+## Command-line tool
+
+The `cli` feature builds a `subtitle-parse` command over the same library.
+Library users do not get its dependencies.
+
+```sh
+cargo install --locked --git https://github.com/mizorewww/subtitle-parse --features cli
+```
+
+```sh
+# Clean rolling auto-captions; the format follows the extension (.srt, .vtt, .txt).
+subtitle-parse convert lecture.en.vtt -o lecture.en.srt
+# Plain text from standard input to standard output.
+cat lecture.en.vtt | subtitle-parse convert --to txt > lecture.txt
+
+# Cue count and time span, after cleaning; dropped cues are listed.
+subtitle-parse inspect lecture.en.vtt
+
+# Sidecar files beside a video, best first: language, a tab, the path.
+subtitle-parse tracks lecture.mp4 --prefer zh-Hans,en
+# Only the best one, for scripts.
+subtitle-parse tracks lecture.mp4 --interface en --best
+```
+
+`-` stands for standard input or output. Without a file, `convert` and `inspect`
+read piped standard input; on a terminal they say what is missing instead of
+waiting. Errors go to standard error; the exit
+status is 0 on success, 1 on failure and 2 on a usage error. `subtitle-parse
+help <command>` describes every option.
 
 ## License
 

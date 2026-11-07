@@ -2,25 +2,39 @@
 name = "subtitle-parse"
 version = "0.1.0"
 edition = "2024"
+rust-version = "1.88"
 license = "MIT"
 description = "Tolerant SRT and WebVTT parsing, sidecar discovery and subtitle track ordering"
 repository = "https://github.com/mizorewww/subtitle-parse"
+documentation = "https://docs.rs/subtitle-parse"
 readme = "README.md"
 keywords = ["subtitles", "srt", "webvtt", "vtt", "captions"]
-categories = ["parser-implementations", "multimedia"]
-# Consumed as a git dependency; see README.
-publish = false
+categories = ["parser-implementations", "multimedia", "command-line-utilities"]
+# The library, the command and what they need to build; tests and CI stay in Git.
+include = ["/src", "/README.md", "/LICENSE"]
 
 [features]
 # Serialize `Cue` and the track types.
 serde = ["dep:serde"]
+# The `subtitle-parse` command-line tool. Library users do not need it.
+cli = ["dep:clap"]
+
+[[bin]]
+name = "subtitle-parse"
+path = "src/bin/subtitle-parse/main.rs"
+required-features = ["cli"]
 
 [dependencies]
+clap = { version = "4", features = ["derive"], optional = true }
 serde = { version = "1", features = ["derive"], optional = true }
 
 [dev-dependencies]
 serde_json = "1"
 tempfile = "3"
+
+[[test]]
+name = "cli"
+required-features = ["cli"]
 
 [package.metadata.docs.rs]
 all-features = true

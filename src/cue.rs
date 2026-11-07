@@ -89,30 +89,60 @@ pub fn parse(content: &str) -> Parsed {
     parsed
 }
 
-/// Writes cues as SRT, numbered from 1.
+/// Writes cues as SRT, numbered from 1. Blank lines in a cue's text are left
+/// out, because a blank line ends a cue; other line breaks stay.
 pub fn to_srt(cues: &[Cue]) -> String {
-    fn timestamp(seconds: f64) -> String {
-        let millis = (seconds.max(0.) * 1000.).round() as u64;
-        format!(
-            "{:02}:{:02}:{:02},{:03}",
-            millis / 3_600_000,
-            millis / 60_000 % 60,
-            millis / 1000 % 60,
-            millis % 1000
-        )
-    }
     cues.iter()
         .enumerate()
         .map(|(index, cue)| {
             format!(
                 "{}\n{} --> {}\n{}\n\n",
                 index + 1,
-                timestamp(cue.start),
-                timestamp(cue.end),
-                cue.text
+                timestamp(cue.start, ','),
+                timestamp(cue.end, ','),
+                text_lines(&cue.text)
             )
         })
         .collect()
+}
+
+/// Writes cues as WebVTT, without cue identifiers. `&`, `<` and `>` in the text
+/// are escaped, and blank lines are left out as in [`to_srt`]. Cues that came from
+/// [`parse`] parse back to the same cues.
+pub fn to_vtt(cues: &[Cue]) -> String {
+    let mut out = String::from("WEBVTT\n\n");
+    for cue in cues {
+        let text = text_lines(&cue.text)
+            .replace('&', "&amp;")
+            .replace('<', "&lt;")
+            .replace('>', "&gt;");
+        out.push_str(&format!(
+            "{} --> {}\n{text}\n\n",
+            timestamp(cue.start, '.'),
+            timestamp(cue.end, '.')
+        ));
+    }
+    out
+}
+
+/// The lines of a cue's text without blank ones, which would end the cue.
+fn text_lines(text: &str) -> String {
+    text.lines()
+        .filter(|line| !line.trim().is_empty())
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+/// `HH:MM:SS`, `separator` and milliseconds: `,` for SRT, `.` for WebVTT.
+fn timestamp(seconds: f64, separator: char) -> String {
+    let millis = (seconds.max(0.) * 1000.).round() as u64;
+    format!(
+        "{:02}:{:02}:{:02}{separator}{:03}",
+        millis / 3_600_000,
+        millis / 60_000 % 60,
+        millis / 1000 % 60,
+        millis % 1000
+    )
 }
 
 /// Lenient timestamp: `HH:MM:SS`, `MM:SS` or bare seconds, with `.` or `,` as the
@@ -469,6 +499,51 @@ and<00:00:05.500><c> useful</c>
             "1\n00:00:01,125 --> 01:00:02,375\nBonjour 世界\n\n"
         );
         assert_eq!(events, cues(&to_srt(&events)));
+    }
+
+    #[test]
+    fn vtt_output_parses_back_with_its_text_escaped() {
+        let events = cues(
+            "1\n00:00:01,125 --> 01:00:02,375\nBonjour 世界\n\n\
+             2\n01:00:02,375 --> 01:00:04,000\nx < 3 &amp; y > 2 --> <b>done</b>\n",
+        );
+        assert_eq!(events[1].text, "x < 3 & y > 2 --> done");
+        assert_eq!(
+            to_vtt(&events),
+            "WEBVTT\n\n\
+             00:00:01.125 --> 01:00:02.375\nBonjour 世界\n\n\
+             01:00:02.375 --> 01:00:04.000\nx &lt; 3 &amp; y &gt; 2 --&gt; done\n\n"
+        );
+        assert_eq!(events, cues(&to_vtt(&events)));
+        assert_eq!(to_vtt(&[]), "WEBVTT\n\n");
+    }
+
+    #[test]
+    fn writers_leave_out_blank_lines_and_keep_other_line_breaks() {
+        let written = [Cue {
+            start: 1.0,
+            end: 2.0,
+            text: "First line\n\n  \r\nsecond line\n".into(),
+        }];
+        assert_eq!(
+            to_srt(&written),
+            "1\n00:00:01,000 --> 00:00:02,000\nFirst line\nsecond line\n\n"
+        );
+        assert_eq!(
+            to_vtt(&written),
+            "WEBVTT\n\n00:00:01.000 --> 00:00:02.000\nFirst line\nsecond line\n\n"
+        );
+        // The blank line no longer splits the cue: its whole text is read back.
+        for text in [to_srt(&written), to_vtt(&written)] {
+            assert_eq!(
+                cues(&text),
+                [Cue {
+                    start: 1.0,
+                    end: 2.0,
+                    text: "First line second line".into(),
+                }]
+            );
+        }
     }
 
     #[test]
