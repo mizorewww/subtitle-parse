@@ -124,6 +124,10 @@ pub fn is_subtitle_file(path: &Path) -> bool {
 /// Every file beside `video` with its name, or its name and a language
 /// (`lecture.srt`, `lecture.zh-Hans.vtt`), keeping both formats, sorted by path.
 /// An unreadable directory has none.
+///
+/// A bare file name such as `lecture.mp4` is in the current directory. Paths
+/// keep the form of `video`: `lecture.mp4` has `lecture.srt`, `media/lecture.mp4`
+/// has `media/lecture.srt`.
 pub fn sidecars(video: &Path) -> Vec<Track> {
     let Some(parent) = video.parent() else {
         return Vec::new();
@@ -131,12 +135,17 @@ pub fn sidecars(video: &Path) -> Vec<Track> {
     let Some(stem) = video.file_stem().and_then(|value| value.to_str()) else {
         return Vec::new();
     };
-    let Ok(entries) = std::fs::read_dir(parent) else {
+    let dir = if parent.as_os_str().is_empty() {
+        Path::new(".")
+    } else {
+        parent
+    };
+    let Ok(entries) = std::fs::read_dir(dir) else {
         return Vec::new();
     };
     let mut paths: Vec<_> = entries
         .flatten()
-        .map(|entry| entry.path())
+        .map(|entry| parent.join(entry.file_name()))
         .filter(|path| {
             if !path.is_file() || !is_subtitle_file(path) {
                 return false;
