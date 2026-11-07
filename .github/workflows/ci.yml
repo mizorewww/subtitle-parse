@@ -37,8 +37,18 @@ jobs:
         run: cargo clippy --all-targets -- -D warnings
       - name: Clippy, all features
         run: cargo clippy --all-targets --all-features -- -D warnings
+      - name: Clippy, CLI
+        run: cargo clippy --all-targets --features cli -- -D warnings
+      - name: Build, CLI
+        run: cargo build --features cli --bin subtitle-parse
+      - name: Library users do not get the CLI's dependencies
+        run: |
+          cargo tree -e normal --prefix none > "$RUNNER_TEMP/deps.txt"
+          ! grep '^clap ' "$RUNNER_TEMP/deps.txt"
       - name: Test, default features
         run: cargo test
+      - name: Test, CLI
+        run: cargo test --features cli
       - name: Test, all features
         run: cargo test --all-features
 
