@@ -3,6 +3,7 @@
 mod convert;
 mod inspect;
 mod io;
+mod tracks;
 
 use clap::{Parser, Subcommand};
 use std::error::Error;
@@ -27,6 +28,7 @@ struct Cli {
 enum Command {
     Convert(convert::Args),
     Inspect(inspect::Args),
+    Tracks(tracks::Args),
 }
 
 /// Why a command failed, for standard error.
@@ -78,6 +80,7 @@ fn main() -> ExitCode {
     let result = match cli.command {
         Command::Convert(args) => convert::run(args),
         Command::Inspect(args) => inspect::run(args),
+        Command::Tracks(args) => tracks::run(args),
     };
     match result {
         Ok(()) => ExitCode::SUCCESS,
