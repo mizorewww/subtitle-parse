@@ -134,6 +134,36 @@ fn convert_takes_the_format_from_the_output_extension() {
 }
 
 #[test]
+fn convert_replaces_a_file_in_place_whole() {
+    let dir = tempfile::tempdir().unwrap();
+    let file = dir.path().join("captions.vtt");
+    std::fs::copy(fixture("youtube-rolling.en.vtt"), &file).unwrap();
+    let output = run(&["convert", path(&file), "-o", path(&file)]);
+    assert!(output.status.success(), "{output:?}");
+    let written = std::fs::read_to_string(&file).unwrap();
+    assert_eq!(written, subtitle_parse::to_vtt(&parse(ROLLING_VTT).cues));
+    let names: Vec<_> = std::fs::read_dir(dir.path())
+        .unwrap()
+        .map(|entry| entry.unwrap().file_name())
+        .collect();
+    assert_eq!(names, ["captions.vtt"], "no temporary file is left");
+}
+
+#[test]
+fn convert_leaves_nothing_behind_when_it_cannot_write() {
+    let dir = tempfile::tempdir().unwrap();
+    let target = dir.path().join("missing").join("clean.srt");
+    let output = run(&[
+        "convert",
+        path(&fixture("youtube-rolling.en.vtt")),
+        "-o",
+        path(&target),
+    ]);
+    assert_fails(&output, "cannot write");
+    assert_eq!(std::fs::read_dir(dir.path()).unwrap().count(), 0);
+}
+
+#[test]
 fn convert_refuses_an_output_of_unknown_format() {
     let dir = tempfile::tempdir().unwrap();
     let target = dir.path().join("clean.ass");

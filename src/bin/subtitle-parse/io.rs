@@ -46,6 +46,10 @@ pub fn read_input(path: &Path) -> Result<String, Failure> {
 }
 
 /// Writes `text` to the file at `path`, or to standard output for `-`.
+///
+/// A file is written whole or not at all: the text goes to a temporary file in
+/// the same directory, which then replaces `path`. Converting a file in place
+/// cannot leave it truncated.
 pub fn write_output(path: &Path, text: &str) -> Result<(), Failure> {
     if is_std(path) {
         let mut stdout = std::io::stdout().lock();
@@ -54,6 +58,35 @@ pub fn write_output(path: &Path, text: &str) -> Result<(), Failure> {
             .and_then(|()| stdout.flush())
             .map_err(|error| Failure::with_source("cannot write standard output", error));
     }
-    std::fs::write(path, text)
-        .map_err(|error| Failure::with_source(format!("cannot write {}", path.display()), error))
+    let failure = |error| Failure::with_source(format!("cannot write {}", path.display()), error);
+    let Some(file_name) = path.file_name() else {
+        return Err(failure(std::io::Error::new(
+            std::io::ErrorKind::InvalidInput,
+            "not a file name",
+        )));
+    };
+    let mut temporary_name = std::ffi::OsString::from(".");
+    temporary_name.push(file_name);
+    temporary_name.push(format!(".{}.tmp", std::process::id()));
+    let temporary = path.with_file_name(temporary_name);
+    let written =
+        write_new(&temporary, text, path).and_then(|()| std::fs::rename(&temporary, path));
+    if written.is_err() {
+        let _ = std::fs::remove_file(&temporary);
+    }
+    written.map_err(failure)
+}
+
+/// Creates `temporary` with `text`, and the permissions of `replacing` if it exists.
+fn write_new(temporary: &Path, text: &str, replacing: &Path) -> std::io::Result<()> {
+    let mut file = std::fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(temporary)?;
+    file.write_all(text.as_bytes())?;
+    file.sync_all()?;
+    if let Ok(metadata) = std::fs::metadata(replacing) {
+        file.set_permissions(metadata.permissions())?;
+    }
+    Ok(())
 }
