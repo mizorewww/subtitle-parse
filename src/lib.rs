@@ -13,7 +13,7 @@ mod cue;
 mod file;
 mod track;
 
-pub use cue::{Cue, Parsed, SkippedCue, parse, parse_timestamp, to_srt};
+pub use cue::{Cue, Parsed, SkippedCue, parse, parse_timestamp, to_srt, to_vtt};
 pub use file::{
     DecodeError, MAX_FILE_BYTES, ReadError, best_file, decode_text, files_in, is_subtitle_file,
     read_text, sidecars,

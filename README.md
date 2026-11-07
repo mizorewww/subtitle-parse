@@ -5,6 +5,7 @@ No required dependencies.
 
 - **Parsing**: SRT and WebVTT timestamps, cue markup, numeric and named entities.
   `x < 3 and y > 2` stays text. Rolling automatic captions lose their repeats.
+- **Writing**: cues back out as SRT or WebVTT.
 - **Reading**: UTF-8 and UTF-16 by BOM, never with lossy replacement.
 - **Finding**: sidecar files beside a video, or every subtitle file in a directory.
 - **Choosing**: order tracks by preference, interface language and original language,
