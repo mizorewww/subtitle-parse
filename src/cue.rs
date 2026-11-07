@@ -89,7 +89,8 @@ pub fn parse(content: &str) -> Parsed {
     parsed
 }
 
-/// Writes cues as SRT, numbered from 1.
+/// Writes cues as SRT, numbered from 1. Blank lines in a cue's text are left
+/// out, because a blank line ends a cue; other line breaks stay.
 pub fn to_srt(cues: &[Cue]) -> String {
     cues.iter()
         .enumerate()
@@ -99,19 +100,19 @@ pub fn to_srt(cues: &[Cue]) -> String {
                 index + 1,
                 timestamp(cue.start, ','),
                 timestamp(cue.end, ','),
-                cue.text
+                text_lines(&cue.text)
             )
         })
         .collect()
 }
 
 /// Writes cues as WebVTT, without cue identifiers. `&`, `<` and `>` in the text
-/// are escaped, so that [`parse`] reads the same text back.
+/// are escaped, and blank lines are left out as in [`to_srt`]. Cues that came from
+/// [`parse`] parse back to the same cues.
 pub fn to_vtt(cues: &[Cue]) -> String {
     let mut out = String::from("WEBVTT\n\n");
     for cue in cues {
-        let text = cue
-            .text
+        let text = text_lines(&cue.text)
             .replace('&', "&amp;")
             .replace('<', "&lt;")
             .replace('>', "&gt;");
@@ -122,6 +123,14 @@ pub fn to_vtt(cues: &[Cue]) -> String {
         ));
     }
     out
+}
+
+/// The lines of a cue's text without blank ones, which would end the cue.
+fn text_lines(text: &str) -> String {
+    text.lines()
+        .filter(|line| !line.trim().is_empty())
+        .collect::<Vec<_>>()
+        .join("\n")
 }
 
 /// `HH:MM:SS`, `separator` and milliseconds: `,` for SRT, `.` for WebVTT.
@@ -507,6 +516,34 @@ and<00:00:05.500><c> useful</c>
         );
         assert_eq!(events, cues(&to_vtt(&events)));
         assert_eq!(to_vtt(&[]), "WEBVTT\n\n");
+    }
+
+    #[test]
+    fn writers_leave_out_blank_lines_and_keep_other_line_breaks() {
+        let written = [Cue {
+            start: 1.0,
+            end: 2.0,
+            text: "First line\n\n  \r\nsecond line\n".into(),
+        }];
+        assert_eq!(
+            to_srt(&written),
+            "1\n00:00:01,000 --> 00:00:02,000\nFirst line\nsecond line\n\n"
+        );
+        assert_eq!(
+            to_vtt(&written),
+            "WEBVTT\n\n00:00:01.000 --> 00:00:02.000\nFirst line\nsecond line\n\n"
+        );
+        // The blank line no longer splits the cue: its whole text is read back.
+        for text in [to_srt(&written), to_vtt(&written)] {
+            assert_eq!(
+                cues(&text),
+                [Cue {
+                    start: 1.0,
+                    end: 2.0,
+                    text: "First line second line".into(),
+                }]
+            );
+        }
     }
 
     #[test]
