@@ -5,10 +5,11 @@ mod inspect;
 mod io;
 mod tracks;
 
-use clap::{Parser, Subcommand};
+use clap::error::ErrorKind;
+use clap::{CommandFactory, Parser, Subcommand};
 use std::error::Error;
 use std::fmt;
-use std::io::Write;
+use std::io::{IsTerminal, Write};
 use std::process::ExitCode;
 
 /// Clean, inspect and find SRT and WebVTT subtitles.
@@ -75,8 +76,36 @@ impl fmt::Display for Failure {
     }
 }
 
+impl Command {
+    /// The name and input of a command that reads subtitles.
+    fn input(&self) -> Option<(&'static str, &Option<std::path::PathBuf>)> {
+        match self {
+            Self::Convert(args) => Some(("convert", &args.input)),
+            Self::Inspect(args) => Some(("inspect", &args.input)),
+            Self::Tracks(_) => None,
+        }
+    }
+}
+
 fn main() -> ExitCode {
     let cli = Cli::parse();
+    let waiting = cli
+        .command
+        .input()
+        .filter(|(_, input)| io::waits_on_terminal(input, std::io::stdin().is_terminal()));
+    if let Some((name, _)) = waiting {
+        // Rather than wait for subtitles typed at the terminal, say what is missing.
+        let mut command = Cli::command();
+        command.build();
+        let subcommand = command.find_subcommand_mut(name).expect("a known command");
+        subcommand
+            .error(
+                ErrorKind::MissingRequiredArgument,
+                "no input file, and standard input is a terminal\n\n\
+                 tip: name a subtitle file, pipe one in, or pass `-` to type it",
+            )
+            .exit();
+    }
     let result = match cli.command {
         Command::Convert(args) => convert::run(args),
         Command::Inspect(args) => inspect::run(args),

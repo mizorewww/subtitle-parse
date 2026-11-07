@@ -1,6 +1,6 @@
 //! `convert`: clean subtitles and write them as SRT, WebVTT or plain text.
 
-use crate::io::{is_std, name, read_input, write_output};
+use crate::io::{input, is_std, name, read_input, write_output};
 use crate::{Failure, warn};
 use clap::ValueEnum;
 use std::path::{Path, PathBuf};
@@ -12,9 +12,9 @@ use subtitle_parse::{Cue, parse, to_srt, to_vtt};
 /// times and keeps each line of rolling automatic captions once.
 #[derive(clap::Args)]
 pub struct Args {
-    /// Subtitle file to read, SRT or WebVTT; `-` reads standard input.
-    #[arg(default_value = "-")]
-    input: PathBuf,
+    /// Subtitle file to read, SRT or WebVTT. `-` reads standard input, as does
+    /// no file when standard input is not a terminal.
+    pub input: Option<PathBuf>,
     /// File to write; `-` writes standard output.
     #[arg(short, long, default_value = "-")]
     output: PathBuf,
@@ -41,7 +41,7 @@ pub fn run(args: Args) -> Result<(), Failure> {
         Some(format) => format,
         None => format_of(&args.output)?,
     };
-    let parsed = parse(&read_input(&args.input)?);
+    let parsed = parse(&read_input(input(&args.input))?);
     if !args.quiet {
         for skipped in &parsed.skipped {
             warn(format_args!(
@@ -53,7 +53,7 @@ pub fn run(args: Args) -> Result<(), Failure> {
     if parsed.cues.is_empty() {
         return Err(Failure::new(format!(
             "no cues found in {}",
-            name(&args.input)
+            name(input(&args.input))
         )));
     }
     let text = match format {

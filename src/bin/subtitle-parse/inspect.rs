@@ -1,6 +1,6 @@
 //! `inspect`: what a subtitle file holds once parsed.
 
-use crate::io::{read_input, write_output};
+use crate::io::{input, read_input, write_output};
 use crate::{Failure, timestamp};
 use std::fmt::Write;
 use std::path::{Path, PathBuf};
@@ -12,13 +12,13 @@ use subtitle_parse::parse;
 /// Cues dropped for unusable times are listed with their header line.
 #[derive(clap::Args)]
 pub struct Args {
-    /// Subtitle file to read, SRT or WebVTT; `-` reads standard input.
-    #[arg(default_value = "-")]
-    input: PathBuf,
+    /// Subtitle file to read, SRT or WebVTT. `-` reads standard input, as does
+    /// no file when standard input is not a terminal.
+    pub input: Option<PathBuf>,
 }
 
 pub fn run(args: Args) -> Result<(), Failure> {
-    let parsed = parse(&read_input(&args.input)?);
+    let parsed = parse(&read_input(input(&args.input))?);
     let mut out = String::new();
     let _ = writeln!(out, "cues:     {}", parsed.cues.len());
     let first = parsed.cues.iter().map(|cue| cue.start).reduce(f64::min);

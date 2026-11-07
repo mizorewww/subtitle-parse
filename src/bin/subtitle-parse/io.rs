@@ -2,12 +2,23 @@
 
 use crate::Failure;
 use std::io::{Read, Write};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use subtitle_parse::{MAX_FILE_BYTES, ReadError, decode_text, read_text};
 
 /// `-` stands for standard input or standard output.
 pub fn is_std(path: &Path) -> bool {
     path.as_os_str() == "-"
+}
+
+/// The input to read: the file given, or `-` for standard input.
+pub fn input(given: &Option<PathBuf>) -> &Path {
+    given.as_deref().unwrap_or(Path::new("-"))
+}
+
+/// Whether a command given `input` would wait for someone to type subtitles:
+/// no input was named and standard input is a terminal. An explicit `-` reads it.
+pub fn waits_on_terminal(given: &Option<PathBuf>, stdin_is_terminal: bool) -> bool {
+    given.is_none() && stdin_is_terminal
 }
 
 /// How a path appears in messages.
@@ -89,4 +100,21 @@ fn write_new(temporary: &Path, text: &str, replacing: &Path) -> std::io::Result<
         file.set_permissions(metadata.permissions())?;
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn only_an_unnamed_input_on_a_terminal_waits() {
+        assert!(waits_on_terminal(&None, true));
+        assert!(!waits_on_terminal(&None, false), "piped input is read");
+        let dash = Some(PathBuf::from("-"));
+        assert!(!waits_on_terminal(&dash, true), "`-` asks for the terminal");
+        let file = Some(PathBuf::from("a.srt"));
+        assert!(!waits_on_terminal(&file, true));
+        assert_eq!(input(&None), Path::new("-"));
+        assert_eq!(input(&file), Path::new("a.srt"));
+    }
 }

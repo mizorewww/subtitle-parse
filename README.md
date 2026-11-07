@@ -67,7 +67,9 @@ subtitle-parse tracks lecture.mp4 --prefer zh-Hans,en
 subtitle-parse tracks lecture.mp4 --interface en --best
 ```
 
-`-` stands for standard input or output. Errors go to standard error; the exit
+`-` stands for standard input or output. Without a file, `convert` and `inspect`
+read piped standard input; on a terminal they say what is missing instead of
+waiting. Errors go to standard error; the exit
 status is 0 on success, 1 on failure and 2 on a usage error. `subtitle-parse
 help <command>` describes every option.
 
