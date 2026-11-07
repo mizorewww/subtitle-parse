@@ -14,8 +14,16 @@ publish = false
 [features]
 # Serialize `Cue` and the track types.
 serde = ["dep:serde"]
+# The `subtitle-parse` command-line tool. Library users do not need it.
+cli = ["dep:clap"]
+
+[[bin]]
+name = "subtitle-parse"
+path = "src/bin/subtitle-parse/main.rs"
+required-features = ["cli"]
 
 [dependencies]
+clap = { version = "4", features = ["derive"], optional = true }
 serde = { version = "1", features = ["derive"], optional = true }
 
 [dev-dependencies]
