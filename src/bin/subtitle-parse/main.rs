@@ -98,12 +98,11 @@ pub fn warn(message: impl fmt::Display) {
     let _ = writeln!(std::io::stderr(), "subtitle-parse: warning: {message}");
 }
 
-/// `HH:MM:SS` followed by `separator` and milliseconds, as SRT (`,`) and WebVTT
-/// (`.`) write times.
-pub fn timestamp(seconds: f64, separator: char) -> String {
+/// A time in seconds as `HH:MM:SS.mmm`, as WebVTT writes it.
+pub fn timestamp(seconds: f64) -> String {
     let millis = (seconds.max(0.) * 1000.).round() as u64;
     format!(
-        "{:02}:{:02}:{:02}{separator}{:03}",
+        "{:02}:{:02}:{:02}.{:03}",
         millis / 3_600_000,
         millis / 60_000 % 60,
         millis / 1000 % 60,

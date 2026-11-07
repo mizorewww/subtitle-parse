@@ -1,11 +1,10 @@
 //! `convert`: clean subtitles and write them as SRT, WebVTT or plain text.
 
 use crate::io::{is_std, name, read_input, write_output};
-use crate::{Failure, timestamp, warn};
+use crate::{Failure, warn};
 use clap::ValueEnum;
-use std::fmt::Write;
 use std::path::{Path, PathBuf};
-use subtitle_parse::{Cue, parse, to_srt};
+use subtitle_parse::{Cue, parse, to_srt, to_vtt};
 
 /// Clean a subtitle file and write it as SRT, WebVTT or plain text.
 ///
@@ -83,25 +82,6 @@ fn format_of(output: &Path) -> Result<Format, Failure> {
             output.display()
         ))),
     }
-}
-
-/// WebVTT, with `&`, `<` and `>` escaped so that the text stays text.
-fn to_vtt(cues: &[Cue]) -> String {
-    let mut out = String::from("WEBVTT\n\n");
-    for cue in cues {
-        let text = cue
-            .text
-            .replace('&', "&amp;")
-            .replace('<', "&lt;")
-            .replace('>', "&gt;");
-        let _ = write!(
-            out,
-            "{} --> {}\n{text}\n\n",
-            timestamp(cue.start, '.'),
-            timestamp(cue.end, '.')
-        );
-    }
-    out
 }
 
 fn to_txt(cues: &[Cue]) -> String {

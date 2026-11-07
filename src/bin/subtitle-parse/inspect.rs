@@ -24,9 +24,9 @@ pub fn run(args: Args) -> Result<(), Failure> {
     let first = parsed.cues.iter().map(|cue| cue.start).reduce(f64::min);
     let last = parsed.cues.iter().map(|cue| cue.end).reduce(f64::max);
     if let (Some(first), Some(last)) = (first, last) {
-        let _ = writeln!(out, "start:    {}", timestamp(first, '.'));
-        let _ = writeln!(out, "end:      {}", timestamp(last, '.'));
-        let _ = writeln!(out, "duration: {}", timestamp(last - first, '.'));
+        let _ = writeln!(out, "start:    {}", timestamp(first));
+        let _ = writeln!(out, "end:      {}", timestamp(last));
+        let _ = writeln!(out, "duration: {}", timestamp(last - first));
     }
     let _ = writeln!(out, "dropped:  {}", parsed.skipped.len());
     for skipped in &parsed.skipped {
