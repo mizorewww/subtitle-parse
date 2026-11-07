@@ -1,6 +1,7 @@
 //! `subtitle-parse`: clean, inspect and find subtitle files from the command line.
 
 mod convert;
+mod inspect;
 mod io;
 
 use clap::{Parser, Subcommand};
@@ -25,6 +26,7 @@ struct Cli {
 #[derive(Subcommand)]
 enum Command {
     Convert(convert::Args),
+    Inspect(inspect::Args),
 }
 
 /// Why a command failed, for standard error.
@@ -75,6 +77,7 @@ fn main() -> ExitCode {
     let cli = Cli::parse();
     let result = match cli.command {
         Command::Convert(args) => convert::run(args),
+        Command::Inspect(args) => inspect::run(args),
     };
     match result {
         Ok(()) => ExitCode::SUCCESS,
