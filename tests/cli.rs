@@ -275,7 +275,11 @@ fn tracks_finds_sidecars_of_a_bare_file_name() {
         None,
     );
     assert!(output.status.success(), "{output:?}");
-    assert!(stdout(&output).trim_end().ends_with("lecture.en.vtt"));
+    assert_eq!(
+        stdout(&output),
+        "lecture.en.vtt\n",
+        "as the video was given"
+    );
 }
 
 #[test]

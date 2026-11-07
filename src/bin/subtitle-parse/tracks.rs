@@ -35,9 +35,6 @@ pub struct Args {
 pub fn run(args: Args) -> Result<(), Failure> {
     let mut tracks = if args.path.is_dir() {
         files_in(&args.path)
-    } else if args.path.parent() == Some(Path::new("")) {
-        // `sidecars` reads the video's parent, which a bare file name lacks.
-        sidecars(&Path::new(".").join(&args.path))
     } else {
         sidecars(&args.path)
     };
