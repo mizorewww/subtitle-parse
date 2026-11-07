@@ -43,8 +43,12 @@ jobs:
         run: cargo build --features cli --bin subtitle-parse
       - name: Library users do not get the CLI's dependencies
         run: |
-          cargo tree -e normal --prefix none > "$RUNNER_TEMP/deps.txt"
-          ! grep '^clap ' "$RUNNER_TEMP/deps.txt"
+          # A failing `cargo tree` stops the step here, not in the test below.
+          deps=$(cargo tree -e normal --prefix none)
+          if grep -q '^clap ' <<< "$deps"; then
+            echo "::error::the library depends on clap without the cli feature"
+            exit 1
+          fi
       - name: Test, default features
         run: cargo test
       - name: Test, CLI
