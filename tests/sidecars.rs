@@ -46,6 +46,9 @@ fn a_bare_file_name_finds_sidecars_in_the_current_directory() {
         best_file(sidecars(Path::new("media/lecture.mp4")), &[], "en", None),
         Some(Path::new("media").join("lecture.fr.srt"))
     );
+    // `media/` is a directory: `media.srt` beside it is not its sidecar.
+    std::fs::write("media.srt", "1\n00:00:00,000 --> 00:00:01,000\nHello\n").unwrap();
+    assert!(sidecars(Path::new("media/")).is_empty());
     // Leave the directory before it is removed.
     std::env::set_current_dir(original).unwrap();
 }

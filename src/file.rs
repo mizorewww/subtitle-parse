@@ -127,8 +127,17 @@ pub fn is_subtitle_file(path: &Path) -> bool {
 ///
 /// A bare file name such as `lecture.mp4` is in the current directory. Paths
 /// keep the form of `video`: `lecture.mp4` has `lecture.srt`, `media/lecture.mp4`
-/// has `media/lecture.srt`.
+/// has `media/lecture.srt`. A path ending in a separator, such as `media/`, names
+/// a directory, not a video, and has none.
 pub fn sidecars(video: &Path) -> Vec<Track> {
+    let ends_in_separator = video
+        .as_os_str()
+        .as_encoded_bytes()
+        .last()
+        .is_some_and(|byte| std::path::is_separator(char::from(*byte)));
+    if ends_in_separator {
+        return Vec::new();
+    }
     let Some(parent) = video.parent() else {
         return Vec::new();
     };
@@ -227,6 +236,26 @@ pub fn best_file(
 mod tests {
     use super::*;
     use crate::cue::{parse, to_srt};
+
+    #[test]
+    fn a_directory_path_ending_in_a_separator_has_no_sidecars() {
+        let dir = tempfile::tempdir().unwrap();
+        let media = dir.path().join("media");
+        std::fs::create_dir(&media).unwrap();
+        std::fs::write(
+            dir.path().join("media.srt"),
+            "1\n00:00:00,000 --> 00:00:01,000\nBonjour\n",
+        )
+        .unwrap();
+        let mut with_separator = media.clone().into_os_string();
+        with_separator.push(std::path::MAIN_SEPARATOR_STR);
+        assert!(sidecars(Path::new(&with_separator)).is_empty());
+        let mut with_slash = media.clone().into_os_string();
+        with_slash.push("/");
+        assert!(sidecars(Path::new(&with_slash)).is_empty());
+        // Without the separator, `media` may be a video's name.
+        assert_eq!(sidecars(&media).len(), 1);
+    }
 
     #[test]
     fn sidecars_include_every_language_and_both_formats_without_unrelated_files() {
