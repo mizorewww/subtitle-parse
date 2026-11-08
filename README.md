@@ -16,7 +16,7 @@ words them in its own language.
 
 ```toml
 [dependencies]
-subtitle-parse = { git = "https://github.com/mizorewww/subtitle-parse" }
+subtitle-parse = "0.1"
 ```
 
 ```rust
@@ -41,15 +41,13 @@ if let Some(path) = best_file(tracks, &[], "en", None) {
 
 The `serde` feature serializes `Cue` and the track types.
 
-Not on crates.io yet; depend on it by Git revision.
-
 ## Command-line tool
 
 The `cli` feature builds a `subtitle-parse` command over the same library.
 Library users do not get its dependencies.
 
 ```sh
-cargo install --locked --git https://github.com/mizorewww/subtitle-parse --features cli
+cargo install --locked subtitle-parse --features cli
 ```
 
 ```sh
